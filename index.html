@@ -352,11 +352,10 @@ const SENHA = 'nexo2025'; // troque para sua senha
 let sb_client = null;
 let SUPABASE_OK = false;
 try {
-  if (SUPABASE_URL !== 'https://rechzjgxopxyswgjelsr.supabase.co') {
-    sb_client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    SUPABASE_OK = true;
-  }
-} catch(e) { console.warn('Supabase não configurado, rodando em modo local.'); }
+  sb_client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  SUPABASE_OK = true;
+  console.log('Supabase conectado!');
+} catch(e) { console.warn('Erro Supabase:', e); }
 
 // ============================================================
 // DADOS & ESTADO
