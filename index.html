@@ -525,17 +525,75 @@ async function saveLead(){
 // ============================================================
 // PROSPECÇÃO
 // ============================================================
-function buscarLeads(){
-  const cidade=document.getElementById('p-cidade').value.trim();const nicho=document.getElementById('p-nicho').value.trim();const err=document.getElementById('prosp-err');
-  if(!cidade||!nicho){err.textContent='Preencha a cidade e o nicho.';return;}err.textContent='';
+const SERPER_KEY = 'f195b01d66d74598420622ddf6d3eecdf1159557';
+
+async function buscarLeads(){
+  const cidade=document.getElementById('p-cidade').value.trim();
+  const nicho=document.getElementById('p-nicho').value.trim();
+  const err=document.getElementById('prosp-err');
+  if(!cidade||!nicho){err.textContent='Preencha a cidade e o nicho.';return;}
+  err.textContent='';
   document.getElementById('res-wrap').style.display='block';
-  document.getElementById('res-list').innerHTML=`<div class="empty"><i class="ti ti-loader" style="font-size:20px;display:block;margin-bottom:8px;color:#4F7CFF"></i>Buscando em ${cidade}...</div>`;
-  setTimeout(()=>{
-    const res=Array.from({length:7},(_,i)=>({tid:'t'+Date.now()+i,nome:NF[i%NF.length]+' '+cidade.split(' ')[0],end:EF[i%EF.length]+' - '+cidade,tel:'('+(Math.floor(Math.random()*90+10))+') 9'+(Math.floor(Math.random()*9000+1000))+'-'+(Math.floor(Math.random()*9000+1000)),site:Math.random()>0.4?'https://exemplo.com':'',av:(3.5+Math.random()*1.5).toFixed(1),rev:Math.floor(Math.random()*300+5),cidade,nicho}));
-    document.getElementById('res-titulo').textContent='"'+nicho+'" em '+cidade;document.getElementById('res-count').textContent=res.length+' encontrados';
-    document.getElementById('res-list').innerHTML=res.map(r=>`<div style="background:rgba(10,18,34,.6);border:1px solid rgba(35,50,76,.4);border-radius:12px;padding:1rem;margin-bottom:8px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(79,124,255,.2),transparent)"></div><div style="font-size:14px;font-weight:700;color:#c8d4ee;margin-bottom:5px">${r.nome}</div><div style="font-size:12px;color:#2a3d56;margin-bottom:2px"><i class="ti ti-map-pin"></i> ${r.end}</div><div style="font-size:12px;color:#2a3d56;margin-bottom:2px"><i class="ti ti-phone"></i> ${r.tel}</div><div style="font-size:12px;color:#2a3d56;margin-bottom:8px"><i class="ti ti-star"></i> ${r.av} · ${r.rev} avaliações · ${r.site?'<span style="color:#1CC88A">tem site</span>':'<span style="color:#E24B4A">sem site</span>'}</div><button id="add-${r.tid}">+ Adicionar</button></div>`).join('');
-    setTimeout(()=>{res.forEach(r=>{const b=document.getElementById('add-'+r.tid);if(b){b.style.cssText=S.add;b.onclick=()=>{const lead={id:nLid++,nome:r.nome,wa:r.tel.replace(/\D/g,''),email:'',insta:'',cidade:r.cidade,status:'Novo',valor:0,notas:['Nicho: '+r.nicho,'Endereço: '+r.end,'Avaliação: '+r.av+' ('+r.rev+' reviews)'+(r.site?' | Site: '+r.site:'')],data:td(),projeto:pAtivo,origem:'prospeccao',av:r.av,site:r.site};prosp[pAtivo].push(lead);leads[pAtivo].push(lead);b.style.cssText=S.ok;b.textContent='✓ Adicionado';b.disabled=true;rHist();toast('Lead adicionado à prospecção!');};};});},30);
-  },1200);
+  document.getElementById('res-list').innerHTML='<div class="empty"><i class="ti ti-loader" style="font-size:20px;display:block;margin-bottom:8px;color:#4F7CFF"></i>Buscando leads reais em '+cidade+'...</div>';
+  try {
+    const resp = await fetch('https://google.serper.dev/maps', {
+      method:'POST',
+      headers:{'X-API-KEY':SERPER_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({q:nicho+' em '+cidade,gl:'br',hl:'pt-br',num:20})
+    });
+    const data = await resp.json();
+    const places = data.places || [];
+    if(!places.length){
+      document.getElementById('res-list').innerHTML='<div class="empty">Nenhum resultado para "'+nicho+'" em '+cidade+'.</div>';
+      return;
+    }
+    const res = places.map((p,i)=>({
+      tid:'t'+Date.now()+i,
+      nome:p.title||'—',
+      end:p.address||'—',
+      tel:p.phoneNumber||'—',
+      site:p.website||'',
+      av:p.rating?String(p.rating):'—',
+      rev:p.ratingCount?String(p.ratingCount):'0',
+      cidade,nicho
+    }));
+    document.getElementById('res-titulo').textContent='"'+nicho+'" em '+cidade;
+    document.getElementById('res-count').textContent=res.length+' encontrados';
+    document.getElementById('res-list').innerHTML=res.map(r=>{
+      const temSite=r.site?'<span style="color:#1CC88A">tem site</span>':'<span style="color:#E24B4A">sem site</span>';
+      return '<div style="background:rgba(10,18,34,.6);border:1px solid rgba(35,50,76,.4);border-radius:12px;padding:1rem;margin-bottom:8px;position:relative;overflow:hidden">'
+        +'<div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(79,124,255,.2),transparent)"></div>'
+        +'<div style="font-size:14px;font-weight:700;color:#c8d4ee;margin-bottom:5px">'+r.nome+'</div>'
+        +'<div style="font-size:12px;color:#2a3d56;margin-bottom:2px"><i class="ti ti-map-pin"></i> '+r.end+'</div>'
+        +'<div style="font-size:12px;color:#2a3d56;margin-bottom:2px"><i class="ti ti-phone"></i> '+r.tel+'</div>'
+        +'<div style="font-size:12px;color:#2a3d56;margin-bottom:8px"><i class="ti ti-star"></i> '+r.av+' · '+r.rev+' avaliações · '+temSite+'</div>'
+        +'<button id="add-'+r.tid+'">+ Adicionar</button>'
+        +'</div>';
+    }).join('');
+    setTimeout(()=>{
+      res.forEach(r=>{
+        const b=document.getElementById('add-'+r.tid);
+        if(b){
+          b.style.cssText=S.add;
+          b.onclick=async()=>{
+            const lead={nome:r.nome,wa:r.tel.replace(/\D/g,''),email:'',insta:'',cidade:r.cidade,status:'Novo',valor:0,
+              notas:['Nicho: '+r.nicho,'Endereço: '+r.end,'Avaliação: '+r.av+' ('+r.rev+' reviews)'+(r.site?' | Site: '+r.site:'')],
+              data:td(),projeto:pAtivo,origem:'prospeccao'};
+            if(SUPABASE_OK){
+              const {data:d}=await sb_client.from('leads').insert(lead).select();
+              if(d&&d[0])lead.id=d[0].id;
+            }else{lead.id=nLid++;}
+            prosp[pAtivo].push(lead);leads[pAtivo].push(lead);
+            b.style.cssText=S.ok;b.textContent='✓ Adicionado';b.disabled=true;
+            rHist();toast('Lead real adicionado!');
+          };
+        }
+      });
+    },30);
+  } catch(e){
+    console.error('Erro Serper:',e);
+    document.getElementById('res-list').innerHTML='<div class="empty">Erro ao buscar. Verifique sua conexão.</div>';
+  }
 }
 function rHist(){const list=prosp[pAtivo];document.getElementById('hist-count').textContent=list.length+' lead(s)';document.getElementById('hist-list').innerHTML=list.length?list.slice().reverse().map(lH).join(''):`<div class="empty">Nenhum lead prospectado ainda.</div>`;}
 
