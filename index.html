@@ -341,8 +341,8 @@ html,body{min-height:100vh;background:#04080f;font-family:system-ui,-apple-syste
 // ============================================================
 // CONFIGURAÇÃO — SUBSTITUA PELOS SEUS DADOS DO SUPABASE
 // ============================================================
-const SUPABASE_URL = 'SUA_URL_AQUI';
-const SUPABASE_KEY = 'SUA_CHAVE_ANON_AQUI';
+const SUPABASE_URL = 'https://rechzjgxopxyswgjelsr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlY2h6amd4b3B4eXN3Z2plbHNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NTgwMTksImV4cCI6MjA5NDAzNDAxOX0.e2voEzq7DG95w0Ng3NVqxfbQOtuT5mQ0RjNMsnRkwUM';
 const USUARIO = 'admin';
 const SENHA = 'nexo2025'; // troque para sua senha
 
@@ -352,7 +352,7 @@ const SENHA = 'nexo2025'; // troque para sua senha
 let sb_client = null;
 let SUPABASE_OK = false;
 try {
-  if (SUPABASE_URL !== 'SUA_URL_AQUI') {
+  if (SUPABASE_URL !== 'https://rechzjgxopxyswgjelsr.supabase.co') {
     sb_client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     SUPABASE_OK = true;
   }
